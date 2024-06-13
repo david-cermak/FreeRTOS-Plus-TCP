@@ -76,6 +76,14 @@
         #define LINK_LAYER_NETMASK_3    0
     #endif
 
+/* The user can define their own ipconfigSTATIC_IP_LOCK() and
+ * ipconfigSTATIC_IP_UNLOCK() macros. */
+#if !defined( ipconfigSTATIC_IP_LOCK )
+#define ipconfigSTATIC_IP_LOCK()    taskENTER_CRITICAL();
+#define ipconfigSTATIC_IP_UNLOCK()  taskEXIT_CRITICAL();
+#endif
+
+
 /*-----------------------------------------------------------*/
 
 /**
@@ -800,12 +808,12 @@
                  * meaning that the conversion is cancelled from here. */
 
                 /* Revert to static IP address. */
-                taskENTER_CRITICAL();
+                ipconfigSTATIC_IP_LOCK()
                 {
                     EP_IPv4_SETTINGS.ulIPAddress = pxEndPoint->ipv4_defaults.ulIPAddress;
                     iptraceDHCP_REQUESTS_FAILED_USING_DEFAULT_IP_ADDRESS( pxEndPoint->ipv4_defaults.ulIPAddress );
                 }
-                taskEXIT_CRITICAL();
+                ipconfigSTATIC_IP_UNLOCK()
 
                 EP_DHCPData.eDHCPState = eNotUsingLeasedAddress;
                 vIPSetDHCP_RATimerEnableState( pxEndPoint, pdFALSE );
